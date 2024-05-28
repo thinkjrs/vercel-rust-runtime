@@ -1,0 +1,18 @@
+[package]
+name = "tsmc-rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "4.5.4", features = ["derive"] }
+fastrand = { version = "2.1.0", features = ["js"] }
+serde_json = { version= "1.0.117", features=["raw_value"] }
+tokio = { version= "1.37.0", features= ["macros"] }
+vercel_runtime = "1.1.3"
+
+# Each handler has to be specified as [[bin]]
+[[bin]]
+name = "test"
+path = "api/test.rs"
