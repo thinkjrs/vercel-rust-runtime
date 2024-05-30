@@ -1,7 +1,6 @@
 use reqwest::Url;
 use serde_json::json;
 use std::collections::HashMap;
-use std::thread;
 use tsmc_rust;
 use vercel_runtime::{run, Body, Error, Request, Response, StatusCode};
 
@@ -18,7 +17,10 @@ pub async fn handler(_req: Request) -> Result<Response<Body>, Error> {
         .query_pairs()
         .into_owned()
         .collect::<HashMap<String, String>>();
-
+    let samples: usize = query_params
+        .get("samples")
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(10);
     let size: usize = query_params
         .get("size")
         .and_then(|s| s.parse().ok())
@@ -40,8 +42,8 @@ pub async fn handler(_req: Request) -> Result<Response<Body>, Error> {
         .and_then(|s| s.parse().ok())
         .unwrap_or(1.0 / 252.0);
 
-    let mut results: Vec<Vec<f32>> = Vec::with_capacity(10);
-    for i in 1..10 {
+    let mut results: Vec<Vec<f32>> = Vec::with_capacity(samples);
+    for _i in 1..samples {
         let random_shocks: Vec<f32> = tsmc_rust::generate_number_series(size);
 
         let mc = tsmc_rust::monte_carlo_series(&starting_value, &mu, &sigma, &dt, &random_shocks);
