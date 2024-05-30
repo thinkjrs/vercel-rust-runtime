@@ -27,10 +27,11 @@ function LineChart({ data }: { data: { results?: number[][] } }) {
   const chartData = {
     labels: data.results[0].map((_, index) => index), // Assuming all series have the same length
     datasets: data?.results.map((series, index) => ({
-      label: `Series ${index}`,
+      label: ``,
       data: series,
       borderColor: `hsl(${(index * 60) % 360}, 70%, 50%)`, // Different color for each series
-      fill: false,
+      fill: true,
+      backgroundColor: `hsl(${(index * 60) % 360}, 70%, 30%)`,
     })),
   };
 
@@ -39,10 +40,48 @@ function LineChart({ data }: { data: { results?: number[][] } }) {
     plugins: {
       legend: {
         position: "top",
+        labels: {
+          useBorderRadius: true,
+          borderRadius: 5,
+        },
+        onClick: (e, legendItem, legend) => {
+          const index = legendItem.datasetIndex;
+          const ci = legend.chart;
+          const meta = ci.getDatasetMeta(index);
+          const currentColor = meta.controller.getDataset().backgroundColor;
+          const dimColor = "rgba(128, 128, 128, 0.3)"; // Dull color
+          if (ci.isDatasetVisible(index)) {
+            ci.hide(index);
+            legendItem.hidden = true;
+          } else {
+            ci.show(index);
+            legendItem.hidden = false;
+          }
+
+          // Persist dim color for hidden items
+          legend.legendItems.forEach((item, idx) => {
+            const itemMeta = ci.getDatasetMeta(idx);
+            item.fillStyle = itemMeta.hidden
+              ? dimColor
+              : itemMeta.controller.getDataset().backgroundColor;
+          });
+        },
       },
       title: {
         display: true,
-        text: "Line Chart of Series Data",
+        text: "Monte Carlo Simulations",
+      },
+      tooltip: {
+        usePointStyle: true,
+      },
+    },
+    elements: {
+      line: {
+        tension: 0.3,
+      },
+      point: {
+        radius: 0,
+        hitRadius: 30,
       },
     },
   };
