@@ -44,11 +44,10 @@ function LineChart({ data }: { data: { results?: number[][] } }) {
           useBorderRadius: true,
           borderRadius: 5,
         },
-        onClick: (e, legendItem, legend) => {
+        onClick: (e: any, legendItem: any, legend: any) => {
           const index = legendItem.datasetIndex;
           const ci = legend.chart;
           const meta = ci.getDatasetMeta(index);
-          const currentColor = meta.controller.getDataset().backgroundColor;
           const dimColor = "rgba(128, 128, 128, 0.3)"; // Dull color
           if (ci.isDatasetVisible(index)) {
             ci.hide(index);
@@ -59,7 +58,7 @@ function LineChart({ data }: { data: { results?: number[][] } }) {
           }
 
           // Persist dim color for hidden items
-          legend.legendItems.forEach((item, idx) => {
+          legend.legendItems.forEach((item: any, idx: number) => {
             const itemMeta = ci.getDatasetMeta(idx);
             item.fillStyle = itemMeta.hidden
               ? dimColor
@@ -85,7 +84,7 @@ function LineChart({ data }: { data: { results?: number[][] } }) {
       },
     },
   };
-
+  // @ts-ignore
   return <Line data={chartData} options={options} />;
 }
 
