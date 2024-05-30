@@ -1,14 +1,67 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import LineChart from "@/components/LineChart";
 import { buildUrl } from "@/utils/build-url";
+
+const DEFAULT_NUM_SIMULATIONS = "10";
+const DEFAULT_MU = "50";
+const DEFAULT_SIGMA = "150";
+const DEFAULT_STARTING_VALUE = "50";
+const DEFAULT_NUM_DAYS = "30";
 
 type ChartData = {
   results?: [][];
   message?: string;
 };
+function Slider({
+  id,
+  labelText,
+  min,
+  max,
+  value,
+  step,
+  onValueChange,
+}: {
+  id?: string;
+  labelText?: string;
+  min?: number | string;
+  max?: number | string;
+  value?: number | string;
+  step?: number | string;
+  onValueChange: (value: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
 
+  const handleChange = () => {
+    if (inputRef.current) {
+      const currentValue = inputRef.current.value;
+      onValueChange(currentValue);
+    }
+  };
+  const labelDisplayText =
+    labelText !== "undefined"
+      ? `${labelText} - ${inputRef.current?.value}`
+      : "Range steps";
+  return (
+    <div>
+      <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+        {labelDisplayText}
+      </label>
+      <input
+        ref={inputRef}
+        id={id || "steps-range"}
+        type="range"
+        min={min || "10"}
+        max={max || "1000"}
+        defaultValue={value || "10"}
+        step={step || "10"}
+        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+        onInput={handleChange} // Use onInput to call handleChange whenever the slider value changes
+      />
+    </div>
+  );
+}
 const getBackendData = (url: string) =>
   fetch(url)
     .then((res) => {
@@ -21,15 +74,32 @@ const getBackendData = (url: string) =>
 
 export default function Home() {
   const [data, setData] = useState<ChartData>({ results: undefined });
+  const [numSimulations, setNumSimulations] = useState(DEFAULT_NUM_SIMULATIONS);
+  const [numDays, setNumDays] = useState(DEFAULT_NUM_DAYS);
+  const [mu, setMu] = useState(DEFAULT_MU);
+  const [sigma, setSigma] = useState(DEFAULT_SIGMA);
+  const [startingValue, setStartingValue] = useState(DEFAULT_STARTING_VALUE);
   const [shouldRefresh, setShouldRefresh] = useState(true);
   useEffect(() => {
     if (shouldRefresh) {
-      getBackendData(buildUrl("/api/test?samples=10"))
+      getBackendData(buildUrl(`/api/test?samples=${DEFAULT_NUM_SIMULATIONS}`))
         .then((data) => setData(data))
         .catch((err) => console.error(err));
       setShouldRefresh(false);
     }
   }, [shouldRefresh, setData]);
+
+  useEffect(() => {
+    const url = buildUrl(
+      `/api/test?samples=${numSimulations}&size=${numDays}&mu=${
+        Number(mu) / 10000.0
+      }&sigma=Number(sigma) / 10000.0}&starting_value=${startingValue}}`
+    );
+    getBackendData(url)
+      .then((data) => setData(data))
+      .catch((err) => console.error(err));
+  }, [numSimulations, numDays, mu, sigma, startingValue, setData]);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-2 pt-8 md:p-24">
       <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl dark:text-white text-center">
@@ -48,13 +118,70 @@ export default function Home() {
       </div>
 
       <LineChart data={data} />
-      <div className="pt-4 pb-8">
+      <div className="pt-4 pb-4">
         <button
           className="transition duration-300 ease-in-out rounded-md hover:dark:bg-gray-800 active:text-black dark:border dark:border-gray-50 px-3 py-2 active:bg-black active:text-white dark:active:bg-gray-700 dark:active:text-gray-200"
           onClick={() => setShouldRefresh(true)}
         >
           Refresh data
         </button>
+      </div>
+      <div className="pt-4 pb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
+        <Slider
+          id="num-simulations-slider"
+          labelText="Number of simulations"
+          step="20"
+          max="500"
+          min="20"
+          value={DEFAULT_NUM_SIMULATIONS}
+          onValueChange={(value) => {
+            setNumSimulations(value);
+          }}
+        />
+        <Slider
+          id="num-days-slider"
+          labelText="Number of days"
+          step="10"
+          max="100"
+          min="10"
+          value={DEFAULT_NUM_DAYS}
+          onValueChange={(value) => {
+            setNumDays(value);
+          }}
+        />
+        <Slider
+          id="mu-slider"
+          labelText="μ in basis points"
+          step="10"
+          max="500"
+          min="10"
+          value={DEFAULT_MU}
+          onValueChange={(value) => {
+            setMu(value);
+          }}
+        />
+        <Slider
+          id="vol-slider"
+          labelText="σ in basis points"
+          step="10"
+          max="5000"
+          min="10"
+          value={DEFAULT_SIGMA}
+          onValueChange={(value) => {
+            setSigma(value);
+          }}
+        />
+        <Slider
+          id="starting-value-slider"
+          labelText="Starting value"
+          step="1"
+          max="100"
+          min="1"
+          value={DEFAULT_STARTING_VALUE}
+          onValueChange={(value) => {
+            setStartingValue(value);
+          }}
+        />
       </div>
     </main>
   );
