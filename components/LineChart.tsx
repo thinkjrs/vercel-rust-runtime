@@ -10,6 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler
 } from "chart.js";
 
 ChartJS.register(
@@ -19,7 +20,8 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
 function LineChart({ data }: { data: { results?: number[][] } }) {
@@ -30,7 +32,6 @@ function LineChart({ data }: { data: { results?: number[][] } }) {
       label: ``,
       data: series,
       borderColor: `hsl(${(index * 60) % 360}, 70%, 50%)`, // Different color for each series
-      fill: true,
       backgroundColor: `hsl(${(index * 60) % 360}, 70%, 30%)`,
     })),
   };
@@ -39,6 +40,7 @@ function LineChart({ data }: { data: { results?: number[][] } }) {
     responsive: true,
     plugins: {
       legend: {
+        display: data.results.length < 50,
         position: "top",
         labels: {
           useBorderRadius: true,
