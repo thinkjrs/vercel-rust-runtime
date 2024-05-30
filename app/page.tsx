@@ -112,8 +112,9 @@ export default function Home() {
           simulations.
         </p>
         <p className="mt-6 text-lg leading-6 text-gray-600 dark:text-gray-200 text-left">
-          Try out the different parameters below to see how quickly these are
-          calculated and rendered. <span className="italic">It's insane!</span>
+          {`Try out the different parameters below to see how quickly these are
+          calculated and rendered. `}
+          <span className="italic">{`It's insane!`}</span>
         </p>
       </div>
 
