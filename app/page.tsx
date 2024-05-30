@@ -1,6 +1,36 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import LineChart from "@/components/LineChart";
+import { buildUrl } from "@/utils/build-url";
+
+type ChartData = {
+  results?: [][];
+  message?: string;
+};
+
+const getBackendData = (url: string) =>
+  fetch(url)
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return res.json();
+    })
+    .catch((err) => console.error(err));
 
 export default function Home() {
+  const [data, setData] = useState<ChartData>({ results: undefined });
+  const [shouldRefresh, setShouldRefresh] = useState(true);
+  useEffect(() => {
+    if (shouldRefresh) {
+      getBackendData(buildUrl("/api/test?samples=10"))
+        .then((data) => setData(data))
+        .catch((err) => console.error(err));
+      setShouldRefresh(false);
+    }
+  }, [shouldRefresh, setData]);
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
@@ -38,7 +68,15 @@ export default function Home() {
           priority
         />
       </div>
-
+      <div className="py-4">
+        <button
+          className="transition duration-300 ease-in-out rounded-md hover:dark:bg-gray-800 active:text-black dark:border dark:border-gray-50 px-3 py-2 active:bg-black active:text-white dark:active:bg-gray-700 dark:active:text-gray-200"
+          onClick={() => setShouldRefresh(true)}
+        >
+          Refresh data
+        </button>
+      </div>
+      <LineChart data={data} />
       <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
         <a
           href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
