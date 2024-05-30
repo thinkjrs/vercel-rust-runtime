@@ -31,7 +31,7 @@ export default function Home() {
     }
   }, [shouldRefresh, setData]);
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="flex min-h-screen flex-col items-center justify-between p-2 pt-8 md:p-24">
       <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl dark:text-white text-center">
         {`The simulations below are running in Vercel's Rust runtime`}
       </h1>
@@ -46,7 +46,9 @@ export default function Home() {
           calculated and rendered. <span className="italic">It's insane!</span>
         </p>
       </div>
-      <div className="py-8">
+
+      <LineChart data={data} />
+      <div className="pt-4 pb-8">
         <button
           className="transition duration-300 ease-in-out rounded-md hover:dark:bg-gray-800 active:text-black dark:border dark:border-gray-50 px-3 py-2 active:bg-black active:text-white dark:active:bg-gray-700 dark:active:text-gray-200"
           onClick={() => setShouldRefresh(true)}
@@ -54,7 +56,6 @@ export default function Home() {
           Refresh data
         </button>
       </div>
-      <LineChart data={data} />
     </main>
   );
 }
