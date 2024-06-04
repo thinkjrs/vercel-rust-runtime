@@ -294,9 +294,6 @@ name = "fastrand"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9fc0510504f03c51ada170672ac806f1f105a88aa97a5281117e1ddc3368e51a"
-dependencies = [
- "getrandom",
-]
 
 [[package]]
 name = "fnv"
@@ -424,10 +421,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "190092ea657667030ac6a35e305e62fc4dd69fd98ac98631e5d3a2b1575a12b5"
 dependencies = [
  "cfg-if",
- "js-sys",
  "libc",
  "wasi",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -1510,7 +1505,6 @@ name = "tsmc-rust"
 version = "0.1.0"
 dependencies = [
  "clap",
- "fastrand",
  "rand",
  "rand_distr",
  "reqwest",

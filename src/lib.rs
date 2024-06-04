@@ -1,12 +1,6 @@
-use fastrand;
 use rand;
 use rand_distr::{Distribution, Normal};
 use std::iter::repeat_with;
-
-pub fn generate_number_series_fastrand(size: usize) -> Vec<f32> {
-    let v: Vec<f32> = repeat_with(|| fastrand::f32()).take(size).collect();
-    v
-}
 
 pub fn generate_number_series(size: usize) -> Vec<f32> {
     let normal = Normal::new(0.0, 1.0).unwrap(); // Standard normal distribution
