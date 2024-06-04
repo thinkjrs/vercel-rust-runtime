@@ -1,26 +1,37 @@
 use fastrand;
+use rand;
+use rand_distr::{Distribution, Normal};
 use std::iter::repeat_with;
 
-pub fn generate_number_series(size: usize) -> Vec<f32> {
+pub fn generate_number_series_fastrand(size: usize) -> Vec<f32> {
     let v: Vec<f32> = repeat_with(|| fastrand::f32()).take(size).collect();
     v
 }
+
+pub fn generate_number_series(size: usize) -> Vec<f32> {
+    let normal = Normal::new(0.0, 1.0).unwrap(); // Standard normal distribution
+    let mut rng = rand::thread_rng();
+    (0..size).map(|_| normal.sample(&mut rng) as f32).collect()
+}
 fn calculate_drift_and_shock(mu: &f32, sigma: &f32, dt: &f32, shock: &f32) -> f32 {
-    ((mu - 0.5 * sigma * sigma) * dt + sigma * (shock - 0.5) * (dt.sqrt())).exp()
+    //((mu - 0.5 * sigma * sigma) * dt + sigma * (shock - 0.5) * (dt.sqrt())).exp()
+    ((mu - 0.5 * sigma * sigma) * dt + sigma * shock * dt.sqrt()).exp()
 }
 pub fn monte_carlo_series(
-    starting_value: &f32,
-    mu: &f32,
-    sigma: &f32,
-    dt: &f32,
-    generated_shocks: &Vec<f32>,
+    starting_value: f32,
+    mu: f32,
+    sigma: f32,
+    dt: f32,
+    generated_shocks: Vec<f32>,
 ) -> Vec<f32> {
     let mut results: Vec<f32> = Vec::with_capacity(generated_shocks.len());
     for (i, shock) in generated_shocks.iter().enumerate() {
         if i > 0 {
-            results.push(results[i - 1] * calculate_drift_and_shock(mu, sigma, dt, shock));
+            let previous_value = results[i - 1];
+            let new_value = previous_value * calculate_drift_and_shock(&mu, &sigma, &dt, &shock);
+            results.push(new_value);
         } else {
-            results.push(*starting_value);
+            results.push(starting_value);
         }
     }
     results
@@ -54,7 +65,7 @@ mod tests {
         let dt: f32 = 1.0 / 252.0;
         let starting_value: f32 = 50.0;
         let random_shocks: Vec<f32> = generate_number_series(size);
-        let mc = monte_carlo_series(&starting_value, &mu, &sigma, &dt, &random_shocks);
+        let mc = monte_carlo_series(starting_value, mu, sigma, dt, random_shocks);
         assert_eq!(mc.len(), size);
         assert_ne!(mc[0], mc[1]);
     }
