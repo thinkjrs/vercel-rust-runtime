@@ -1,6 +1,5 @@
 use rand;
 use rand_distr::{Distribution, Normal};
-use std::iter::repeat_with;
 
 pub fn generate_number_series(size: usize) -> Vec<f32> {
     let normal = Normal::new(0.0, 1.0).unwrap(); // Standard normal distribution
