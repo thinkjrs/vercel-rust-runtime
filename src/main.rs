@@ -39,11 +39,11 @@ fn main() {
     let dt = get_dt_from_frequency(args.dt);
     let random_shocks: Vec<f32> = tsmc_rust::generate_number_series(args.size);
     let mc = tsmc_rust::monte_carlo_series(
-        &args.starting_value,
-        &args.mu,
-        &args.sigma,
-        &dt,
-        &random_shocks,
+        args.starting_value,
+        args.mu,
+        args.sigma,
+        dt,
+        random_shocks,
     );
     println!("{:?}", mc);
     // add JSON input here

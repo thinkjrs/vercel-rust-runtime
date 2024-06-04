@@ -46,7 +46,7 @@ pub async fn handler(_req: Request) -> Result<Response<Body>, Error> {
     for _i in 1..samples {
         let random_shocks: Vec<f32> = tsmc_rust::generate_number_series(size);
 
-        let mc = tsmc_rust::monte_carlo_series(&starting_value, &mu, &sigma, &dt, &random_shocks);
+        let mc = tsmc_rust::monte_carlo_series(starting_value, mu, sigma, dt, random_shocks);
         results.push(mc);
     }
     Ok(Response::builder()
