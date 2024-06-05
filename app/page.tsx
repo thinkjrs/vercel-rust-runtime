@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import LineChart from "@/components/LineChart";
 import { buildUrl } from "@/utils/build-url";
+import Slider from "@/components/Slider";
 
 const DEFAULT_NUM_SIMULATIONS = "10";
 const DEFAULT_MU = "50";
@@ -14,54 +15,6 @@ type ChartData = {
   results?: [][];
   message?: string;
 };
-function Slider({
-  id,
-  labelText,
-  min,
-  max,
-  value,
-  step,
-  onValueChange,
-}: {
-  id?: string;
-  labelText?: string;
-  min?: number | string;
-  max?: number | string;
-  value?: number | string;
-  step?: number | string;
-  onValueChange: (value: string) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const handleChange = () => {
-    if (inputRef.current) {
-      const currentValue = inputRef.current.value;
-      onValueChange(currentValue);
-    }
-  };
-  const labelDisplayText =
-    labelText !== "undefined"
-      ? `${labelText} - ${inputRef.current?.value}`
-      : "Range steps";
-  return (
-    <div>
-      <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-        {labelDisplayText}
-      </label>
-      <input
-        ref={inputRef}
-        id={id || "steps-range"}
-        type="range"
-        min={min || "10"}
-        max={max || "1000"}
-        defaultValue={value || "10"}
-        step={step || "10"}
-        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-        onInput={handleChange} // Use onInput to call handleChange whenever the slider value changes
-      />
-    </div>
-  );
-}
 const getBackendData = (url: string) =>
   fetch(url)
     .then((res) => {
@@ -82,23 +35,53 @@ export default function Home() {
   const [shouldRefresh, setShouldRefresh] = useState(true);
   useEffect(() => {
     if (shouldRefresh) {
-      getBackendData(buildUrl(`/api/test?samples=${DEFAULT_NUM_SIMULATIONS}`))
+      const url = buildUrl(
+        `/api/test?samples=${DEFAULT_NUM_SIMULATIONS}&size=${DEFAULT_NUM_DAYS}&mu=${
+          Number(DEFAULT_MU) / 10000.0
+        }&sigma=${
+          Number(DEFAULT_SIGMA) / 10000.0
+        }&starting_value=${DEFAULT_STARTING_VALUE}}`
+      );
+      getBackendData(buildUrl(url))
         .then((data) => setData(data))
         .catch((err) => console.error(err));
+      setMu(DEFAULT_MU);
+      setSigma(DEFAULT_SIGMA);
+      setNumDays(DEFAULT_NUM_DAYS);
+      setStartingValue(DEFAULT_STARTING_VALUE);
+      setNumSimulations(DEFAULT_NUM_SIMULATIONS);
       setShouldRefresh(false);
     }
-  }, [shouldRefresh, setData]);
+  }, [
+    shouldRefresh,
+    setData,
+    setMu,
+    setSigma,
+    setNumDays,
+    setStartingValue,
+    setNumSimulations,
+  ]);
 
   useEffect(() => {
-    const url = buildUrl(
-      `/api/test?samples=${numSimulations}&size=${numDays}&mu=${
-        Number(mu) / 10000.0
-      }&sigma=${Number(sigma) / 10000.0}&starting_value=${startingValue}}`
-    );
-    getBackendData(url)
-      .then((data) => setData(data))
-      .catch((err) => console.error(err));
-  }, [numSimulations, numDays, mu, sigma, startingValue, setData]);
+    if (!shouldRefresh) {
+      const url = buildUrl(
+        `/api/test?samples=${numSimulations}&size=${numDays}&mu=${
+          Number(mu) / 10000.0
+        }&sigma=${Number(sigma) / 10000.0}&starting_value=${startingValue}}`
+      );
+      getBackendData(url)
+        .then((data) => setData(data))
+        .catch((err) => console.error(err));
+    }
+  }, [
+    numSimulations,
+    numDays,
+    mu,
+    sigma,
+    startingValue,
+    setData,
+    shouldRefresh,
+  ]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-2 pt-8 md:p-24">
@@ -119,14 +102,6 @@ export default function Home() {
       </div>
 
       <LineChart data={data} />
-      <div className="pt-4 pb-4">
-        <button
-          className="transition duration-300 ease-in-out rounded-md hover:dark:bg-gray-800 active:text-black dark:border dark:border-gray-50 px-3 py-2 active:bg-black active:text-white dark:active:bg-gray-700 dark:active:text-gray-200"
-          onClick={() => setShouldRefresh(true)}
-        >
-          Refresh data
-        </button>
-      </div>
       <div className="pt-4 pb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
         <Slider
           id="num-simulations-slider"
@@ -152,7 +127,7 @@ export default function Home() {
         />
         <Slider
           id="mu-slider"
-          labelText="μ in basis points"
+          labelText="μ"
           step="10"
           max="500"
           min="10"
@@ -160,10 +135,11 @@ export default function Home() {
           onValueChange={(value) => {
             setMu(value);
           }}
+          divisor={100}
         />
         <Slider
           id="vol-slider"
-          labelText="σ in basis points"
+          labelText="σ"
           step="10"
           max="5000"
           min="10"
@@ -171,6 +147,7 @@ export default function Home() {
           onValueChange={(value) => {
             setSigma(value);
           }}
+          divisor={100}
         />
         <Slider
           id="starting-value-slider"
@@ -183,6 +160,14 @@ export default function Home() {
             setStartingValue(value);
           }}
         />
+      </div>
+      <div className="pt-4 pb-4">
+        <button
+          className="transition duration-300 ease-in-out rounded-md hover:dark:bg-gray-800 active:text-black dark:border dark:border-gray-50 px-3 py-2 active:bg-black active:text-white dark:active:bg-gray-700 dark:active:text-gray-200"
+          onClick={() => setShouldRefresh(true)}
+        >
+          Refresh data
+        </button>
       </div>
     </main>
   );
