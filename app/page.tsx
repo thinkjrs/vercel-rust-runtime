@@ -40,7 +40,7 @@ export default function Home() {
           Number(DEFAULT_MU) / 10000.0
         }&sigma=${
           Number(DEFAULT_SIGMA) / 10000.0
-        }&starting_value=${DEFAULT_STARTING_VALUE}}`
+        }&starting_value=${DEFAULT_STARTING_VALUE}`
       );
       getBackendData(buildUrl(url))
         .then((data) => setData(data))
@@ -67,7 +67,7 @@ export default function Home() {
       const url = buildUrl(
         `/api/test?samples=${numSimulations}&size=${numDays}&mu=${
           Number(mu) / 10000.0
-        }&sigma=${Number(sigma) / 10000.0}&starting_value=${startingValue}}`
+        }&sigma=${Number(sigma) / 10000.0}&starting_value=${startingValue}`
       );
       getBackendData(url)
         .then((data) => setData(data))
