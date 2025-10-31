@@ -42,7 +42,7 @@ export default function Home() {
           Number(DEFAULT_SIGMA) / 10000.0
         }&starting_value=${DEFAULT_STARTING_VALUE}`
       );
-      getBackendData(buildUrl(url))
+      getBackendData(url)
         .then((data) => setData(data))
         .catch((err) => console.error(err));
       setMu(DEFAULT_MU);
