@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import LineChart from "@/components/LineChart";
 import { buildUrl } from "@/utils/build-url";
 import Slider from "@/components/Slider";
@@ -12,9 +12,9 @@ const DEFAULT_STARTING_VALUE = "50";
 const DEFAULT_NUM_DAYS = "30";
 
 type ChartData = {
-  results?: [][];
-  message?: string;
+  results?: number[][];
 };
+
 const getBackendData = (url: string) =>
   fetch(url)
     .then((res) => {
@@ -32,56 +32,25 @@ export default function Home() {
   const [mu, setMu] = useState(DEFAULT_MU);
   const [sigma, setSigma] = useState(DEFAULT_SIGMA);
   const [startingValue, setStartingValue] = useState(DEFAULT_STARTING_VALUE);
-  const [shouldRefresh, setShouldRefresh] = useState(true);
-  useEffect(() => {
-    if (shouldRefresh) {
-      const url = buildUrl(
-        `/api/test?samples=${DEFAULT_NUM_SIMULATIONS}&size=${DEFAULT_NUM_DAYS}&mu=${
-          Number(DEFAULT_MU) / 10000.0
-        }&sigma=${
-          Number(DEFAULT_SIGMA) / 10000.0
-        }&starting_value=${DEFAULT_STARTING_VALUE}`
-      );
-      getBackendData(url)
-        .then((data) => setData(data))
-        .catch((err) => console.error(err));
-      setMu(DEFAULT_MU);
-      setSigma(DEFAULT_SIGMA);
-      setNumDays(DEFAULT_NUM_DAYS);
-      setStartingValue(DEFAULT_STARTING_VALUE);
-      setNumSimulations(DEFAULT_NUM_SIMULATIONS);
-      setShouldRefresh(false);
-    }
-  }, [
-    shouldRefresh,
-    setData,
-    setMu,
-    setSigma,
-    setNumDays,
-    setStartingValue,
-    setNumSimulations,
-  ]);
+
+  const handleRefresh = () => {
+    setMu(DEFAULT_MU);
+    setSigma(DEFAULT_SIGMA);
+    setNumDays(DEFAULT_NUM_DAYS);
+    setStartingValue(DEFAULT_STARTING_VALUE);
+    setNumSimulations(DEFAULT_NUM_SIMULATIONS);
+  };
 
   useEffect(() => {
-    if (!shouldRefresh) {
-      const url = buildUrl(
-        `/api/test?samples=${numSimulations}&size=${numDays}&mu=${
-          Number(mu) / 10000.0
-        }&sigma=${Number(sigma) / 10000.0}&starting_value=${startingValue}`
-      );
-      getBackendData(url)
-        .then((data) => setData(data))
-        .catch((err) => console.error(err));
-    }
-  }, [
-    numSimulations,
-    numDays,
-    mu,
-    sigma,
-    startingValue,
-    setData,
-    shouldRefresh,
-  ]);
+    const url = buildUrl(
+      `/api/test?samples=${numSimulations}&size=${numDays}&mu=${
+        Number(mu) / 10000.0
+      }&sigma=${Number(sigma) / 10000.0}&starting_value=${startingValue}`
+    );
+    getBackendData(url)
+      .then((data) => setData(data))
+      .catch((err) => console.error(err));
+  }, [numSimulations, numDays, mu, sigma, startingValue, setData]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-2 pt-8 md:p-24">
@@ -163,7 +132,7 @@ export default function Home() {
       <div className="pt-4 pb-4">
         <button
           className="transition duration-300 ease-in-out rounded-md hover:dark:bg-gray-800 active:text-black dark:border dark:border-gray-50 px-3 py-2 active:bg-black active:text-white dark:active:bg-gray-700 dark:active:text-gray-200"
-          onClick={() => setShouldRefresh(true)}
+          onClick={handleRefresh}
         >
           Refresh data
         </button>
