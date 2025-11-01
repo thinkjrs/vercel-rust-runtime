@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import LineChart from "@/components/LineChart";
 import { buildUrl } from "@/utils/build-url";
 import Slider from "@/components/Slider";
@@ -33,13 +33,13 @@ export default function Home() {
   const [sigma, setSigma] = useState(DEFAULT_SIGMA);
   const [startingValue, setStartingValue] = useState(DEFAULT_STARTING_VALUE);
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     setMu(DEFAULT_MU);
     setSigma(DEFAULT_SIGMA);
     setNumDays(DEFAULT_NUM_DAYS);
     setStartingValue(DEFAULT_STARTING_VALUE);
     setNumSimulations(DEFAULT_NUM_SIMULATIONS);
-  };
+  }, []);
 
   useEffect(() => {
     const url = buildUrl(
@@ -50,7 +50,7 @@ export default function Home() {
     getBackendData(url)
       .then((data) => setData(data))
       .catch((err) => console.error(err));
-  }, [numSimulations, numDays, mu, sigma, startingValue, setData]);
+  }, [numSimulations, numDays, mu, sigma, startingValue]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-2 pt-8 md:p-24">
@@ -78,9 +78,7 @@ export default function Home() {
           max="500"
           min="20"
           value={numSimulations}
-          onValueChange={(value) => {
-            setNumSimulations(value);
-          }}
+          onValueChange={setNumSimulations}
         />
         <Slider
           id="num-days-slider"
@@ -89,9 +87,7 @@ export default function Home() {
           max="100"
           min="10"
           value={numDays}
-          onValueChange={(value) => {
-            setNumDays(value);
-          }}
+          onValueChange={setNumDays}
         />
         <Slider
           id="mu-slider"
@@ -100,9 +96,7 @@ export default function Home() {
           max="500"
           min="10"
           value={mu}
-          onValueChange={(value) => {
-            setMu(value);
-          }}
+          onValueChange={setMu}
           divisor={100}
         />
         <Slider
@@ -112,9 +106,7 @@ export default function Home() {
           max="5000"
           min="10"
           value={sigma}
-          onValueChange={(value) => {
-            setSigma(value);
-          }}
+          onValueChange={setSigma}
           divisor={100}
         />
         <Slider
@@ -124,9 +116,7 @@ export default function Home() {
           max="100"
           min="1"
           value={startingValue}
-          onValueChange={(value) => {
-            setStartingValue(value);
-          }}
+          onValueChange={setStartingValue}
         />
       </div>
       <div className="pt-4 pb-4">
