@@ -10,7 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 } from "chart.js";
 
 ChartJS.register(
@@ -90,4 +90,4 @@ function LineChart({ data }: { data: { results?: number[][] } }) {
   return <Line data={chartData} options={options} />;
 }
 
-export default LineChart;
+export default React.memo(LineChart);
