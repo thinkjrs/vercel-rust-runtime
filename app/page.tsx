@@ -100,7 +100,6 @@ export default function Home() {
           <span className="italic">{`It's insane!`}</span>
         </p>
       </div>
-
       <LineChart data={data} />
       <div className="pt-4 pb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
         <Slider
@@ -109,7 +108,7 @@ export default function Home() {
           step="20"
           max="500"
           min="20"
-          value={DEFAULT_NUM_SIMULATIONS}
+          value={numSimulations}
           onValueChange={(value) => {
             setNumSimulations(value);
           }}
@@ -120,7 +119,7 @@ export default function Home() {
           step="10"
           max="100"
           min="10"
-          value={DEFAULT_NUM_DAYS}
+          value={numDays}
           onValueChange={(value) => {
             setNumDays(value);
           }}
@@ -131,7 +130,7 @@ export default function Home() {
           step="10"
           max="500"
           min="10"
-          value={DEFAULT_MU}
+          value={mu}
           onValueChange={(value) => {
             setMu(value);
           }}
@@ -143,7 +142,7 @@ export default function Home() {
           step="10"
           max="5000"
           min="10"
-          value={DEFAULT_SIGMA}
+          value={sigma}
           onValueChange={(value) => {
             setSigma(value);
           }}
@@ -155,7 +154,7 @@ export default function Home() {
           step="1"
           max="100"
           min="1"
-          value={DEFAULT_STARTING_VALUE}
+          value={startingValue}
           onValueChange={(value) => {
             setStartingValue(value);
           }}
