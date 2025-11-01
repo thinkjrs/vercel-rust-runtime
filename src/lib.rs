@@ -20,14 +20,12 @@ pub fn monte_carlo_series(
     generated_shocks: Vec<f32>,
 ) -> Vec<f32> {
     let mut results: Vec<f32> = Vec::with_capacity(generated_shocks.len());
+    results.push(starting_value);
+
     for (i, shock) in generated_shocks.iter().enumerate() {
-        if i > 0 {
-            let previous_value = results[i - 1];
-            let new_value = previous_value * calculate_drift_and_shock(&mu, &sigma, &dt, &shock);
-            results.push(new_value);
-        } else {
-            results.push(starting_value);
-        }
+        let previous_value = results[i];
+        let new_value = previous_value * calculate_drift_and_shock(&mu, &sigma, &dt, &shock);
+        results.push(new_value);
     }
     results
 }
@@ -51,7 +49,6 @@ mod tests {
         let v: Vec<f32> = generate_number_series(10);
         assert_eq!(v.len(), 10);
     }
-
     #[test]
     fn it_generates_monte_carlo_series() {
         let size = 10;
@@ -61,7 +58,7 @@ mod tests {
         let starting_value: f32 = 50.0;
         let random_shocks: Vec<f32> = generate_number_series(size);
         let mc = monte_carlo_series(starting_value, mu, sigma, dt, random_shocks);
-        assert_eq!(mc.len(), size);
+        assert_eq!(mc.len(), size + 1);
         assert_ne!(mc[0], mc[1]);
     }
 }
