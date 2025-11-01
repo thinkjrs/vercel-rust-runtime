@@ -7,8 +7,10 @@ pub fn generate_number_series(size: usize) -> Vec<f32> {
     (0..size).map(|_| normal.sample(&mut rng) as f32).collect()
 }
 fn calculate_drift_and_shock(mu: &f32, sigma: &f32, dt: &f32, shock: &f32) -> f32 {
-    //((mu - 0.5 * sigma * sigma) * dt + sigma * (shock - 0.5) * (dt.sqrt())).exp()
-    ((mu - 0.5 * sigma * sigma) * dt + sigma * shock * dt.sqrt()).exp()
+    // precise form of the GBM step
+    let drift = (mu - (sigma.powi(2) / 2.0)) * dt;
+    let shock_val = sigma * shock * dt.sqrt();
+    (drift + shock_val).exp()
 }
 pub fn monte_carlo_series(
     starting_value: f32,
