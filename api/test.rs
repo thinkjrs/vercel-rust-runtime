@@ -43,7 +43,7 @@ pub async fn handler(_req: Request) -> Result<Response<Body>, Error> {
         .unwrap_or(1.0 / 252.0);
 
     let mut results: Vec<Vec<f32>> = Vec::with_capacity(samples);
-    for _i in 1..samples {
+    for _i in 0..samples {
         let random_shocks: Vec<f32> = tsmc_rust::generate_number_series(size);
 
         let mc = tsmc_rust::monte_carlo_series(starting_value, mu, sigma, dt, random_shocks);
