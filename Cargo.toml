@@ -13,8 +13,14 @@ reqwest = "0.12.4"
 serde_json = { version = "1.0.117", features = ["raw_value"] }
 tokio = { version = "1.37.0", features = ["macros"] }
 vercel_runtime = "1"
+cutup = "0.1.4"
+nalgebra = "0.33"
 
 # Each handler has to be specified as [[bin]]
 [[bin]]
 name = "test"
 path = "api/test.rs"
+
+[[bin]]
+name = "allocate"
+path = "api/allocate.rs"
