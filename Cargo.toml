@@ -18,8 +18,8 @@ nalgebra = "0.33"
 
 # Each handler has to be specified as [[bin]]
 [[bin]]
-name = "test"
-path = "api/test.rs"
+name = "simulate"
+path = "api/simulate.rs"
 
 [[bin]]
 name = "allocate"

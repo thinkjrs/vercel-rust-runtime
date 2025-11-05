@@ -85,7 +85,7 @@ export default function Home() {
   useEffect(() => {
     const fetchSimulations = async () => {
       const url = buildUrl(
-        `/api/test?samples=${numSimulations}&size=${numDays}&mu=${
+        `/api/simulate?samples=${numSimulations}&size=${numDays}&mu=${
           Number(mu) / 10000.0
         }&sigma=${Number(sigma) / 10000.0}&starting_value=${startingValue}`
       );
