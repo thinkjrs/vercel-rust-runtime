@@ -125,7 +125,7 @@ export default function Home() {
             const result = await res.json();
 
             const newValues = computePortfolioValue(
-              data.results,
+              data.results!,
               result.weights
             );
             return { ...p, values: newValues, weights: result.weights };
