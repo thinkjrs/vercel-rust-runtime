@@ -1,7 +1,7 @@
 // api/allocate.rs
 
 use serde_json::{json, Value};
-use tsmc_rust::{allocate_from_json, json_to_price_matrix};
+use tsmc_rust::allocate_from_json;
 use vercel_runtime::{run, Body, Error, Request, Response, StatusCode};
 
 pub async fn handler(req: Request) -> Result<Response<Body>, Error> {
