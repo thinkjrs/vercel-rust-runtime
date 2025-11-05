@@ -76,6 +76,8 @@ export default function Home() {
   };
 
   // Fetch simulated prices and auto-update allocations
+
+  // 1️⃣ Fetch simulated prices when parameters change
   useEffect(() => {
     const fetchSimulations = async () => {
       const url = buildUrl(
@@ -87,52 +89,55 @@ export default function Home() {
       try {
         const simData = await getBackendData(url);
         setData(simData);
-
-        // Automatically update all existing allocations
-        if (portfolioPaths.length > 0) {
-          const updatedPaths = await Promise.all(
-            portfolioPaths.map(async (p) => {
-              const body = JSON.stringify({
-                prices: simData.results,
-                strategy: p.label.toLowerCase(),
-              });
-
-              try {
-                const res = await fetch(buildUrl("/api/allocate"), {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body,
-                });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const result = await res.json();
-
-                const newValues = computePortfolioValue(
-                  simData.results,
-                  result.weights
-                );
-
-                return {
-                  ...p,
-                  values: newValues,
-                  weights: result.weights,
-                };
-              } catch (e) {
-                console.error(`Failed to update ${p.label}:`, e);
-                return p;
-              }
-            })
-          );
-
-          setPortfolioPaths(updatedPaths);
-        }
       } catch (err) {
         console.error("Simulation fetch error:", err);
       }
     };
 
     fetchSimulations();
-  }, [numSimulations, numDays, mu, sigma, startingValue, portfolioPaths]);
+  }, [numSimulations, numDays, mu, sigma, startingValue]);
 
+  // 2️⃣ Whenever prices change and there are existing allocations, reallocate automatically
+
+  useEffect(() => {
+    if (
+      !data.results ||
+      data.results.length === 0 ||
+      portfolioPaths.length === 0
+    )
+      return;
+
+    (async () => {
+      try {
+        const updatedPaths = await Promise.all(
+          portfolioPaths.map(async (p) => {
+            const body = JSON.stringify({
+              prices: data.results,
+              strategy: p.label.toLowerCase(),
+            });
+
+            const res = await fetch(buildUrl("/api/allocate"), {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body,
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const result = await res.json();
+
+            const newValues = computePortfolioValue(
+              data.results,
+              result.weights
+            );
+            return { ...p, values: newValues, weights: result.weights };
+          })
+        );
+
+        setPortfolioPaths(updatedPaths);
+      } catch (e) {
+        console.error("Auto-update allocations failed:", e);
+      }
+    })();
+  }, [data.results, portfolioPaths]); // only runs when new simulated prices arrive
   const handleAllocate = async () => {
     if (!data.results || data.results.length === 0) return;
 
@@ -187,7 +192,6 @@ export default function Home() {
       console.error("Allocation error:", err);
     }
   };
-
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-2 pt-8 md:p-24">
       <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl dark:text-white text-center">
