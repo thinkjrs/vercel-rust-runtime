@@ -48,7 +48,7 @@ export default function Home() {
   const [sigma, setSigma] = useState(DEFAULT_SIGMA);
   const [startingValue, setStartingValue] = useState(DEFAULT_STARTING_VALUE);
   const [allocationType, setAllocationType] = useState("ew");
-  const [allocation, setAllocation] = useState<AllocationData | null>(null);
+  const [_, setAllocation] = useState<AllocationData | null>(null);
   const [portfolioPaths, setPortfolioPaths] = useState<PortfolioPath[]>([]);
 
   const handleRefresh = useCallback(() => {
@@ -61,7 +61,6 @@ export default function Home() {
     setPortfolioPaths([]);
   }, []);
 
-  // --- Helper to compute portfolio value over time ---
   const computePortfolioValue = (prices: number[][], weights: number[]) => {
     if (!prices.length || !weights.length) return [];
     const n = prices[0].length;
@@ -132,7 +131,7 @@ export default function Home() {
     };
 
     fetchSimulations();
-  }, [numSimulations, numDays, mu, sigma, startingValue]);
+  }, [numSimulations, numDays, mu, sigma, startingValue, portfolioPaths]);
 
   const handleAllocate = async () => {
     if (!data.results || data.results.length === 0) return;
@@ -202,8 +201,6 @@ export default function Home() {
           simulation.
         </p>
       </div>
-
-      {/* parameter sliders */}
       <div className="pt-4 pb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
         <Slider
           id="num-simulations-slider"
@@ -253,8 +250,6 @@ export default function Home() {
           onValueChange={setStartingValue}
         />
       </div>
-
-      {/* refresh + allocate controls */}
       <div className="pt-4 pb-4 flex flex-col md:flex-row gap-4 items-center">
         <button
           className="transition duration-300 ease-in-out rounded-md hover:dark:bg-gray-800 active:text-black dark:border dark:border-gray-50 px-3 py-2 active:bg-black active:text-white dark:active:bg-gray-700 dark:active:text-gray-200"
@@ -294,7 +289,6 @@ export default function Home() {
         </h2>
         <LineChart data={data} />
       </div>
-      {/* --- New chart for allocated portfolio performance --- */}
       {portfolioPaths.length > 0 && (
         <div className="w-full mt-12">
           <h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white mb-4">
@@ -304,9 +298,9 @@ export default function Home() {
             title="Portfolio Performance"
             data={{
               results: portfolioPaths.map((p) => p.values),
+              labels: portfolioPaths.map((p) => p.label),
             }}
           />
-          {/* mini pie charts below */}
           <div className="flex flex-wrap justify-center gap-4 mt-6">
             {portfolioPaths.map((p, idx) => (
               <div
