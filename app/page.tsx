@@ -215,6 +215,64 @@ export default function Home() {
           simulation.
         </p>
       </div>
+      {/* Prices */}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full mt-12">
+        {/* Left: simulated prices */}
+        <div>
+          <h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white mb-4">
+            Simulated Asset Prices
+          </h2>
+          <LineChart data={data} />
+        </div>
+
+        {/* Right: portfolio returns and pies */}
+        {portfolioPaths.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white mb-4">
+              Simulated Portfolio Returns ($1M invested)
+            </h2>
+            <LineChart
+              title="Portfolio Performance"
+              data={{
+                results: portfolioPaths.map((p) => p.values),
+                labels: portfolioPaths.map((p) => p.label),
+              }}
+            />
+            <div className="mt-6 flex flex-wrap justify-center gap-4">
+              {portfolioPaths.map((p, idx) => (
+                <div
+                  key={idx}
+                  className="w-40 rounded-md bg-white p-2 shadow-md dark:bg-gray-800 flex flex-col items-center"
+                >
+                  <Pie
+                    data={{
+                      labels: p.weights.map((_, i) => `A${i + 1}`),
+                      datasets: [
+                        {
+                          data: p.weights.map((w) => (w * 100).toFixed(2)),
+                          backgroundColor: p.weights.map(
+                            (_, i) => `hsl(${(i * 60) % 360}, 70%, 50%)`
+                          ),
+                        },
+                      ],
+                    }}
+                    options={{
+                      plugins: {
+                        legend: { display: false },
+                        title: { display: false },
+                      },
+                    }}
+                  />
+                  <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {p.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Controls */}
       <div className="pt-4 pb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
@@ -300,65 +358,6 @@ export default function Home() {
             Allocate
           </button>
         </div>
-      </div>
-
-      {/* Prices */}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full mt-12">
-        {/* Left: simulated prices */}
-        <div>
-          <h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white mb-4">
-            Simulated Asset Prices
-          </h2>
-          <LineChart data={data} />
-        </div>
-
-        {/* Right: portfolio returns and pies */}
-        {portfolioPaths.length > 0 && (
-          <div>
-            <h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white mb-4">
-              Simulated Portfolio Returns ($1M invested)
-            </h2>
-            <LineChart
-              title="Portfolio Performance"
-              data={{
-                results: portfolioPaths.map((p) => p.values),
-                labels: portfolioPaths.map((p) => p.label),
-              }}
-            />
-            <div className="mt-6 flex flex-wrap justify-center gap-4">
-              {portfolioPaths.map((p, idx) => (
-                <div
-                  key={idx}
-                  className="w-40 rounded-md bg-white p-2 shadow-md dark:bg-gray-800 flex flex-col items-center"
-                >
-                  <Pie
-                    data={{
-                      labels: p.weights.map((_, i) => `A${i + 1}`),
-                      datasets: [
-                        {
-                          data: p.weights.map((w) => (w * 100).toFixed(2)),
-                          backgroundColor: p.weights.map(
-                            (_, i) => `hsl(${(i * 60) % 360}, 70%, 50%)`
-                          ),
-                        },
-                      ],
-                    }}
-                    options={{
-                      plugins: {
-                        legend: { display: false },
-                        title: { display: false },
-                      },
-                    }}
-                  />
-                  <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {p.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </main>
   );
