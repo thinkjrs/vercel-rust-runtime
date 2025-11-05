@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import LineChart from "@/components/LineChart";
 import Slider from "@/components/Slider";
 import { buildUrl } from "@/utils/build-url";
@@ -51,6 +51,12 @@ export default function Home() {
   const [_, setAllocation] = useState<AllocationData | null>(null);
   const [portfolioPaths, setPortfolioPaths] = useState<PortfolioPath[]>([]);
 
+  // keep a ref in sync with portfolioPaths so effects can read latest
+  const portfolioPathsRef = useRef<PortfolioPath[]>([]);
+  useEffect(() => {
+    portfolioPathsRef.current = portfolioPaths;
+  }, [portfolioPaths]);
+
   const handleRefresh = useCallback(() => {
     setMu(DEFAULT_MU);
     setSigma(DEFAULT_SIGMA);
@@ -75,9 +81,7 @@ export default function Home() {
     return dailyPortfolio.map((x) => x * base);
   };
 
-  // Fetch simulated prices and auto-update allocations
-
-  // 1️⃣ Fetch simulated prices when parameters change
+  // 1) Fetch simulated prices when parameters change
   useEffect(() => {
     const fetchSimulations = async () => {
       const url = buildUrl(
@@ -97,20 +101,17 @@ export default function Home() {
     fetchSimulations();
   }, [numSimulations, numDays, mu, sigma, startingValue]);
 
-  // 2️⃣ Whenever prices change and there are existing allocations, reallocate automatically
-
+  // 2) Re-allocate automatically ONLY when new prices arrive.
+  //    Read existing strategies from the ref (do not subscribe), then update state once.
   useEffect(() => {
-    if (
-      !data.results ||
-      data.results.length === 0 ||
-      portfolioPaths.length === 0
-    )
-      return;
+    if (!data.results || data.results.length === 0) return;
+    if (portfolioPathsRef.current.length === 0) return;
 
     (async () => {
       try {
-        const updatedPaths = await Promise.all(
-          portfolioPaths.map(async (p) => {
+        const currentPaths = portfolioPathsRef.current; // snapshot
+        const updated = await Promise.all(
+          currentPaths.map(async (p) => {
             const body = JSON.stringify({
               prices: data.results,
               strategy: p.label.toLowerCase(),
@@ -132,12 +133,14 @@ export default function Home() {
           })
         );
 
-        setPortfolioPaths(updatedPaths);
+        // single state write; does not re-trigger this effect because it only depends on data.results
+        setPortfolioPaths(updated);
       } catch (e) {
         console.error("Auto-update allocations failed:", e);
       }
     })();
-  }, [data.results, portfolioPaths]); // only runs when new simulated prices arrive
+  }, [data.results]);
+
   const handleAllocate = async () => {
     if (!data.results || data.results.length === 0) return;
 
@@ -160,25 +163,31 @@ export default function Home() {
         data.results,
         result.weights
       );
-      const color = (() => {
-        const existing = portfolioPaths.find((p) =>
-          p.label.toLowerCase().startsWith(result.strategy.toLowerCase())
-        );
-        return existing
-          ? existing.color
-          : `hsl(${Math.random() * 360}, 70%, 50%)`;
-      })();
 
-      // Update or add by strategy
+      // stable color per strategy (consistent across updates)
+      const colorFor = (strategy: string) => {
+        const found = portfolioPathsRef.current.find((p) =>
+          p.label.toLowerCase().startsWith(strategy.toLowerCase())
+        );
+        if (found) return found.color;
+        // deterministic-ish color by hashing strategy
+        const hash = Array.from(strategy).reduce(
+          (a, c) => a + c.charCodeAt(0),
+          0
+        );
+        return `hsl(${(hash * 37) % 360}, 70%, 50%)`;
+      };
+
       setPortfolioPaths((prev) => {
+        const label = result.strategy.toUpperCase();
         const idx = prev.findIndex((p) =>
           p.label.toLowerCase().startsWith(result.strategy.toLowerCase())
         );
         const updatedEntry: PortfolioPath = {
-          label: `${result.strategy.toUpperCase()}`,
+          label,
           values: portfolioValues,
           weights: result.weights,
-          color,
+          color: colorFor(result.strategy),
         };
         if (idx >= 0) {
           const copy = [...prev];
@@ -192,6 +201,7 @@ export default function Home() {
       console.error("Allocation error:", err);
     }
   };
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-2 pt-8 md:p-24">
       <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl dark:text-white text-center">
@@ -205,6 +215,8 @@ export default function Home() {
           simulation.
         </p>
       </div>
+
+      {/* Controls */}
       <div className="pt-4 pb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
         <Slider
           id="num-simulations-slider"
@@ -254,6 +266,8 @@ export default function Home() {
           onValueChange={setStartingValue}
         />
       </div>
+
+      {/* refresh + allocate controls */}
       <div className="pt-4 pb-4 flex flex-col md:flex-row gap-4 items-center">
         <button
           className="transition duration-300 ease-in-out rounded-md hover:dark:bg-gray-800 active:text-black dark:border dark:border-gray-50 px-3 py-2 active:bg-black active:text-white dark:active:bg-gray-700 dark:active:text-gray-200"
@@ -287,12 +301,16 @@ export default function Home() {
           </button>
         </div>
       </div>
+
+      {/* Prices */}
       <div className="w-full mt-12">
         <h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white mb-4">
           Simulated Asset Prices
         </h2>
         <LineChart data={data} />
       </div>
+
+      {/* Portfolio performance + pies */}
       {portfolioPaths.length > 0 && (
         <div className="w-full mt-12">
           <h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white mb-4">
@@ -305,11 +323,11 @@ export default function Home() {
               labels: portfolioPaths.map((p) => p.label),
             }}
           />
-          <div className="flex flex-wrap justify-center gap-4 mt-6">
+          <div className="mt-6 flex flex-wrap justify-center gap-4">
             {portfolioPaths.map((p, idx) => (
               <div
                 key={idx}
-                className="w-40 flex flex-col items-center bg-white dark:bg-gray-800 p-2 rounded-md shadow-md"
+                className="w-40 rounded-md bg-white p-2 shadow-md dark:bg-gray-800 flex flex-col items-center"
               >
                 <Pie
                   data={{
@@ -330,7 +348,7 @@ export default function Home() {
                     },
                   }}
                 />
-                <p className="mt-2 text-sm text-gray-700 dark:text-gray-300 font-medium">
+                <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   {p.label}
                 </p>
               </div>
