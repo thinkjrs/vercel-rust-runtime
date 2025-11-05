@@ -11,8 +11,8 @@ It runs Monte Carlo simulations for asset prices on the Rust backend and visuali
 ## **⚙️ How it Works**
 
 1. **Frontend:** The Next.js app in the app/ directory provides the UI and sliders for adjusting simulation parameters.
-2. **API Request:** When a user changes a parameter, the frontend makes a fetch request to /api/test.
-3. **Vercel Routing:** Vercel routes this request to the compiled Rust function api/test.rs (defined in vercel.json).
+2. **API Request:** When a user changes a parameter, the frontend makes a fetch request to /api/simulate.
+3. **Vercel Routing:** Vercel routes this request to the compiled Rust function api/simulate.rs (defined in vercel.json).
 4. **Rust Backend:** The Rust function parses the query parameters, runs the Monte Carlo simulations (using rand_distr), and returns the results as a JSON payload.
 5. **Visualization:** The frontend receives the JSON and uses Chart.js to render the simulation graphs.
 
@@ -39,7 +39,7 @@ cd vercel-rust-runtime
 The Vercel dev server (vercel dev) **requires the Rust binary to be compiled in release mode** before it can be served.  
 `cargo build --release`
 
-This compiles your api/test.rs file and places the executable in the target/release/ directory, where vercel dev expects to find it.
+This compiles your api/simulate.rs file and places the executable in the target/release/ directory, where vercel dev expects to find it.
 
 ### **Step 3: Run the Development Server**
 
@@ -58,7 +58,7 @@ Your application should now be running at http://localhost:3000, and the fronten
 
 ## **📄 API Documentation**
 
-### **GET /api/test**
+### **GET /api/simultate**
 
 Runs a series of Monte Carlo simulations for a simple asset price path.
 
