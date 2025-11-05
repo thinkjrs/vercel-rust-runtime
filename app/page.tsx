@@ -57,6 +57,9 @@ export default function Home() {
     portfolioPathsRef.current = portfolioPaths;
   }, [portfolioPaths]);
 
+  // bootstrap guard: ensure default EW only runs once per simulation reset
+  const bootstrappedRef = useRef<boolean>(false);
+
   const handleRefresh = useCallback(() => {
     setMu(DEFAULT_MU);
     setSigma(DEFAULT_SIGMA);
@@ -65,6 +68,7 @@ export default function Home() {
     setNumSimulations(DEFAULT_NUM_SIMULATIONS);
     setAllocation(null);
     setPortfolioPaths([]);
+    bootstrappedRef.current = false; // allow auto-EW again after refresh
   }, []);
 
   const computePortfolioValue = (prices: number[][], weights: number[]) => {
@@ -81,7 +85,7 @@ export default function Home() {
     return dailyPortfolio.map((x) => x * base);
   };
 
-  // 1) Fetch simulated prices when parameters change
+  // Fetch simulated prices when parameters change
   useEffect(() => {
     const fetchSimulations = async () => {
       const url = buildUrl(
@@ -93,6 +97,8 @@ export default function Home() {
       try {
         const simData = await getBackendData(url);
         setData(simData);
+        // new simulations arrived → enable bootstrapping for this set
+        bootstrappedRef.current = false;
       } catch (err) {
         console.error("Simulation fetch error:", err);
       }
@@ -101,8 +107,62 @@ export default function Home() {
     fetchSimulations();
   }, [numSimulations, numDays, mu, sigma, startingValue]);
 
-  // 2) Re-allocate automatically ONLY when new prices arrive.
-  //    Read existing strategies from the ref (do not subscribe), then update state once.
+  // Immediately bootstrap a default EW allocation once simulations are available
+  useEffect(() => {
+    // only if simulations are ready, we have no paths yet, and we haven't bootstrapped
+    if (!data.results || data.results.length === 0) return;
+    if (portfolioPathsRef.current.length > 0) return;
+    if (bootstrappedRef.current) return;
+
+    (async () => {
+      try {
+        const body = JSON.stringify({
+          prices: data.results,
+          strategy: "ew",
+        });
+
+        const res = await fetch(buildUrl("/api/allocate"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body,
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const result = await res.json();
+        setAllocation(result);
+
+        const values = computePortfolioValue(data.results!, result.weights);
+
+        // deterministic-ish color for EW, and stable on re-allocations
+        const colorFor = (strategy: string) => {
+          const found = portfolioPathsRef.current.find((p) =>
+            p.label.toLowerCase().startsWith(strategy.toLowerCase())
+          );
+          if (found) return found.color;
+          const hash = Array.from(strategy).reduce(
+            (a, c) => a + c.charCodeAt(0),
+            0
+          );
+          return `hsl(${(hash * 37) % 360}, 70%, 50%)`;
+        };
+
+        setPortfolioPaths([
+          {
+            label: result.strategy.toUpperCase(), // "EW"
+            values,
+            weights: result.weights,
+            color: colorFor(result.strategy),
+          },
+        ]);
+
+        bootstrappedRef.current = true; // prevent re-bootstrapping on minor state changes
+      } catch (e) {
+        console.error("Default EW bootstrap failed:", e);
+      }
+    })();
+  }, [data.results]);
+
+  // Re-allocate automatically ONLY when new prices arrive
+  // Read existing strategies from the ref (do not subscribe), then update state once
   useEffect(() => {
     if (!data.results || data.results.length === 0) return;
     if (portfolioPathsRef.current.length === 0) return;
@@ -215,18 +275,14 @@ export default function Home() {
           simulation.
         </p>
       </div>
-      {/* Prices */}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full mt-12">
-        {/* Left: simulated prices */}
         <div>
           <h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white mb-4">
             Simulated Asset Prices
           </h2>
           <LineChart data={data} />
         </div>
-
-        {/* Right: portfolio returns and pies */}
         {portfolioPaths.length > 0 && (
           <div>
             <h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white mb-4">
@@ -273,8 +329,6 @@ export default function Home() {
           </div>
         )}
       </div>
-
-      {/* Controls */}
       <div className="pt-4 pb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
         <Slider
           id="num-simulations-slider"
@@ -324,8 +378,6 @@ export default function Home() {
           onValueChange={setStartingValue}
         />
       </div>
-
-      {/* refresh + allocate controls */}
       <div className="pt-4 pb-4 flex flex-col md:flex-row gap-4 items-center">
         <button
           className="transition duration-300 ease-in-out rounded-md hover:dark:bg-gray-800 active:text-black dark:border dark:border-gray-50 px-3 py-2 active:bg-black active:text-white dark:active:bg-gray-700 dark:active:text-gray-200"
