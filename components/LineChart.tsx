@@ -24,7 +24,13 @@ ChartJS.register(
   Filler
 );
 
-function LineChart({ data }: { data: { results?: number[][] } }) {
+function LineChart({
+  data,
+  title,
+}: {
+  data: { results?: number[][] };
+  title?: string;
+}) {
   if (typeof data?.results === "undefined") return null;
   const chartData = {
     labels: data.results[0].map((_, index) => index), // Assuming all series have the same length
@@ -70,7 +76,7 @@ function LineChart({ data }: { data: { results?: number[][] } }) {
       },
       title: {
         display: true,
-        text: "Monte Carlo Simulations",
+        text: title || "Monte Carlo Simulations",
       },
       tooltip: {
         usePointStyle: true,
